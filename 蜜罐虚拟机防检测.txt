@@ -1,0 +1,36 @@
+一，实现了独立的防检测模块。
+avmd.sys 负责全局注入dll
+avmd.dll（x64/x86）负责挂钩API
+
+
+二，在kvm/qemu上的效果
+减少24项al-khaser的检出项。减少1项pafish的检出项。
+
+
+三，剩余检出项及处理方式
+
+1）获取磁盘大小——增加虚拟机的磁盘，超过80GB。
+
+2）检测鼠标移动——无需处理。
+
+3）CPUID中的hypervisor标志和型号——修改虚拟机配置文件。
+   详见 https://superuser.com/questions/1387935/hiding-virtual-machine-status-from-guest-operating-system
+
+4）RDTSC时间测试——应用层无法处理，内核处理十分不便（需要关闭PatchGuard并挂钩中断）。需kvm在VMM层处理，VMware已经处理。kvm未查到相关资料。
+
+5）判断LDT的基地址——此项本意是用来判断VMware的，只对旧版VMware有效。但目前测试qemu也有效。此项可能是误判。没有找到相关资料处理，可能需要修改kvm源码重新编译。
+
+
+四，其他需要处理的地方。
+应增加虚拟机的CPU核心数至少2个，内存大于2G。
+
+
+五，部署
+1）复制avmd.sys到C:\Windows\system32\drivers目录
+复制x64\avmd.dll到C:\Windows\system32目录
+复制x86\avmd.dll到C:\Windows\SysWOW64目录
+
+2）安装驱动
+启动控制台，执行命令
+sc create avmd type= kernel binPath= system32\drivers\avmd.sys
+net start avmd
